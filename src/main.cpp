@@ -1,0 +1,92 @@
+#include "../include/simulator.h"
+#include <iostream>
+#include <sstream>
+#include <string>
+
+int main() {
+    Simulator sim;
+    std::string command;
+
+    // Automatically load the input file at startup
+    // std::string inputFile = "input/input.hex";
+    // std::ifstream file(inputFile);
+    // if (file.good()) {
+    //     sim.loadProgram(inputFile);
+    //     std::cout << "Loaded program: " << inputFile << std::endl;
+    // } else {
+    //     std::cerr << "Error: Could not open input file: " << inputFile << std::endl;
+    // }
+
+    while (true) {
+        std::cout << "> ";
+        std::getline(std::cin, command);
+        std::istringstream iss(command);
+        std::string cmd;
+        iss >> cmd;
+
+
+        if (cmd == "load" && iss >> cmd && cmd == "input.s") {
+            // Execute the bash script
+            int result = system("./scripts/load_input.sh load input.s");
+            if (result == 0) {
+                //std::cout << "Successfully executed load_input.sh" << std::endl;
+                // Load the generated input.hex file
+                sim.loadProgram("./input/input.hex");
+                sim.loadDataSection("./input/input.s");
+            } else {
+                std::cerr << "Error executing load_input.sh" << std::endl;
+            }
+        }
+    
+        else if (cmd == "run") {
+            sim.run();
+        } else if (cmd == "step") {
+            sim.step();
+        } else if (cmd == "regs") {
+            sim.printRegs();
+        } else if (cmd == "mem") {
+            uint64_t addr;
+            int count;
+            iss >> std::hex >> addr >> std::dec >> count;
+            sim.printMem(addr, count);
+        } else if (cmd == "show-stack") {
+            sim.showStack();
+
+        } else if(cmd == "list-breaks"){
+            sim.listBreakpoints();
+        }
+        else if (cmd == "break") {
+            int line;
+            iss >> line;
+            sim.setBreakpoint(line);
+        } else if (cmd == "del") {
+            std::string subCmd;
+            iss >> subCmd;
+            if (subCmd == "break") {
+                int line;
+                iss >> line;
+                sim.deleteBreakpoint(line);
+            } else {
+                std::cout << "Unknown command" << std::endl;
+            }
+        } else if (cmd == "exit") {
+            std::cout << "Exited the simulator" << std::endl;
+            break;
+        } 
+        else if (cmd == "text") {
+            sim.printTextSection();
+        }
+        else if (cmd == "data") {
+            sim.printDataSection();
+        }
+        else if(cmd == "help"){
+            sim.showHelp();
+        }else {
+            std::cout << "Unknown command" << std::endl;
+        }
+        
+        std::cout << std::endl;
+    }
+
+    return 0;
+}
